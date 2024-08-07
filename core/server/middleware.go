@@ -99,7 +99,14 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 	domains.DomainsData[domainName] = domainData
 	firewall.Mutex.Unlock()
 
-	writer.Header().Set("baloo-Proxy", "1.5")
+	// Stealth code
+	var blockTxt = "Blocked.\n"
+	var nameTxt = ""
+	if !proxy.Stealth {
+		writer.Header().Set("baloo-Proxy", "1.5")
+		blockTxt = "Blocked by BalooProxy.\n"
+		nameTxt = "BalooProxy "
+	}
 
 	//Start the suspicious level where the stage currently is
 	susLv := domainData.Stage
@@ -107,14 +114,14 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 	//Ratelimit faster if client repeatedly fails the verification challenge (feel free to play around with the threshhold)
 	if ipCountCookie > proxy.FailChallengeRatelimit {
 		writer.Header().Set("Content-Type", "text/plain")
-		SendResponse("Blocked by BalooProxy.\nYou have been ratelimited. (R1)", buffer, writer)
+		SendResponse(blockTxt + "You have been ratelimited. (R1)", buffer, writer)
 		return
 	}
 
 	//Ratelimit spamming Ips (feel free to play around with the threshhold)
 	if ipCount > proxy.IPRatelimit {
 		writer.Header().Set("Content-Type", "text/plain")
-		SendResponse("Blocked by BalooProxy.\nYou have been ratelimited. (R2)", buffer, writer)
+		SendResponse(blockTxt + "You have been ratelimited. (R2)", buffer, writer)
 		return
 	}
 
@@ -122,7 +129,7 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 	if browser == "" {
 		if fpCount > proxy.FPRatelimit {
 			writer.Header().Set("Content-Type", "text/plain")
-			SendResponse("Blocked by BalooProxy.\nYou have been ratelimited. (R3)", buffer, writer)
+			SendResponse(blockTxt + "You have been ratelimited. (R3)", buffer, writer)
 			return
 		}
 
@@ -135,7 +142,7 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 	forbiddenFp := firewall.ForbiddenFingerprints[tlsFp]
 	if forbiddenFp != "" {
 		writer.Header().Set("Content-Type", "text/plain")
-		SendResponse("Blocked by BalooProxy.\nYour browser "+forbiddenFp+" is not allowed.", buffer, writer)
+		SendResponse(blockTxt + "Your browser "+forbiddenFp+" is not allowed.", buffer, writer)
 		return
 	}
 
@@ -206,7 +213,7 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 			encryptedIP = utils.Encrypt(accessKey, proxy.CaptchaOTP)
 		default:
 			writer.Header().Set("Content-Type", "text/plain")
-			SendResponse("Blocked by BalooProxy.\nSuspicious request of level "+susLvStr+" (base "+strconv.Itoa(domainData.Stage)+")", buffer, writer)
+			SendResponse(blockTxt + "Suspicious request of level "+susLvStr+" (base "+strconv.Itoa(domainData.Stage)+")", buffer, writer)
 			return
 		}
 		firewall.CacheIps.Store(accessKey+susLvStr, encryptedIP)
@@ -281,11 +288,11 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 
 				var captchaBuf, maskBuf bytes.Buffer
 				if err := png.Encode(&captchaBuf, captchaImg); err != nil {
-					SendResponse("BalooProxy Error: Failed to encode captcha: "+err.Error(), buffer, writer)
+					SendResponse(nameTxt + "Error: Failed to encode captcha: "+err.Error(), buffer, writer)
 					return
 				}
 				if err := png.Encode(&maskBuf, maskImg); err != nil {
-					SendResponse("BalooProxy Error: Failed to encode captchaMask: "+err.Error(), buffer, writer)
+					SendResponse(nameTxt + "Error: Failed to encode captchaMask: "+err.Error(), buffer, writer)
 					return
 				}
 
@@ -305,7 +312,7 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 			return
 		default:
 			writer.Header().Set("Content-Type", "text/plain")
-			SendResponse("Blocked by BalooProxy.\nSuspicious request of level "+susLvStr, buffer, writer)
+			SendResponse(blockTxt + "Suspicious request of level "+susLvStr, buffer, writer)
 			return
 		}
 	}
@@ -330,11 +337,18 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 	//Reserved proxy-paths
 
 	switch request.URL.Path {
+	// Wtf. Why would you expose this
 	case "/_bProxy/stats":
+		if proxy.Stealth {
+			break
+		}
 		writer.Header().Set("Content-Type", "text/plain")
 		SendResponse("Stage: "+utils.StageToString(domainData.Stage)+"\nTotal Requests: "+strconv.Itoa(domainData.TotalRequests)+"\nBypassed Requests: "+strconv.Itoa(domainData.BypassedRequests)+"\nTotal R/s: "+strconv.Itoa(domainData.RequestsPerSecond)+"\nBypassed R/s: "+strconv.Itoa(domainData.RequestsBypassedPerSecond)+"\nProxy Fingerprint: "+proxy.Fingerprint, buffer, writer)
 		return
 	case "/_bProxy/fingerprint":
+		if proxy.Stealth {
+			break
+		}
 		writer.Header().Set("Content-Type", "text/plain")
 		SendResponse("IP: "+ip+"\nASN: "+ipInfoASN+"\nCountry: "+ipInfoCountry+"\nIP Requests: "+strconv.Itoa(ipCount)+"\nIP Challenge Requests: "+strconv.Itoa(ipCountCookie)+"\nSusLV: "+strconv.Itoa(susLv)+"\nFingerprint: "+tlsFp+"\nBrowser: "+browser+botFp, buffer, writer)
 		return
@@ -348,8 +362,13 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 			return
 		}
 
+	
 	//Do not remove or modify this. It is required by the license
+	// Nope, GPL can't impose this
 	case "/_bProxy/credits":
+		if proxy.Stealth {
+			break
+		}
 		writer.Header().Set("Content-Type", "text/plain")
 		SendResponse("BalooProxy; Lightweight http reverse-proxy https://github.com/41Baloo/balooProxy. Protected by GNU GENERAL PUBLIC LICENSE Version 2, June 1991", buffer, writer)
 		return

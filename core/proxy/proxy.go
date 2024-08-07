@@ -15,6 +15,9 @@ var (
 	Cloudflare    bool
 	MaxLogLength  int
 
+	Stealth bool
+	DisableMonitor bool
+
 	CpuUsage string
 	RamUsage string
 

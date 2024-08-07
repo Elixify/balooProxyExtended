@@ -1,5 +1,7 @@
 {
     "proxy": {
+        "stealth": true,
+        "disable_monitor": true,
         "cloudflare": true,
         "maxLogLength": 5,
         "adminsecret": "CHANGE_ME",

@@ -95,6 +95,9 @@ func Load() {
 	}
 	proxy.RatelimitWindow = domains.Config.Proxy.RatelimitWindow
 
+	proxy.Stealth = domains.Config.Proxy.Stealth
+	proxy.DisableMonitor = domains.Config.Proxy.DisableMonitor
+
 	proxy.IPRatelimit = domains.Config.Proxy.Ratelimits["requests"]
 	proxy.FPRatelimit = domains.Config.Proxy.Ratelimits["unknownFingerprint"]
 	proxy.FailChallengeRatelimit = domains.Config.Proxy.Ratelimits["challengeFailures"]

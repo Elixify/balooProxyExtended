@@ -35,20 +35,12 @@ func Monitor() {
 
 	defer pnc.PanicHndl()
 
-	PrintMutex.Lock()
-	screen.Clear()
-	screen.MoveTopLeft()
-	PrintMutex.Unlock()
-
 	proxy.LastSecondTime = time.Now()
 	proxy.LastSecondTimeFormated = proxy.LastSecondTime.Format("15:04:05")
 	proxy.LastSecondTimestamp = int(proxy.LastSecondTime.Unix())
 	proxy.Last10SecondTimestamp = utils.TrimTime(proxy.LastSecondTimestamp)
 	proxy.CurrHour, _, _ = proxy.LastSecondTime.Clock()
 	proxy.CurrHourStr = strconv.Itoa(proxy.CurrHour)
-
-	//Responsible for handeling user-commands
-	go commands()
 
 	//Responsible for clearing outdated cache and data
 	go clearProxyCache()
@@ -58,6 +50,20 @@ func Monitor() {
 
 	//Responsible for keeping track of ratelimit
 	go evaluateRatelimit()
+
+	// Print code below
+	if proxy.DisableMonitor {
+		fmt.Println("Monitor running in background ...")
+		return
+	}
+
+	PrintMutex.Lock()
+	screen.Clear()
+	screen.MoveTopLeft()
+	PrintMutex.Unlock()
+
+	//Responsible for handeling user-commands
+	go commands()
 
 	PrintMutex.Lock()
 	fmt.Println("\033[" + fmt.Sprint(11+proxy.MaxLogLength) + ";1H")
@@ -445,6 +451,9 @@ func ReloadConfig() {
 	proxy.FPRatelimit = domains.Config.Proxy.Ratelimits["unknownFingerprint"]
 	proxy.FailChallengeRatelimit = domains.Config.Proxy.Ratelimits["challengeFailures"]
 	proxy.FailRequestRatelimit = domains.Config.Proxy.Ratelimits["noRequestsSent"]
+
+	proxy.Stealth = domains.Config.Proxy.Stealth
+	proxy.DisableMonitor = domains.Config.Proxy.DisableMonitor
 
 	for i, domain := range domains.Config.Domains {
 		domains.Domains = append(domains.Domains, domain.Name)

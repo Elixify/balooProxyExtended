@@ -101,6 +101,8 @@ type Proxy struct {
 	RatelimitWindow int               `json:"ratelimit_time"`
 	Ratelimits      map[string]int    `json:"ratelimits"`
 	Colors          []string          `json:"colors"`
+	Stealth      	bool              `json:"stealth"`
+	DisableMonitor 	bool              `json:"disable_monitor"`
 }
 
 type TimeoutSettings struct {
