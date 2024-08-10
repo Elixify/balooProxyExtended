@@ -107,13 +107,13 @@ func Load() {
 	fmt.Println("Loading Fingerprints ...")
 
 	// Load the fingerprints locally
-	if err := GetFingerprints("fingerprints/known_fingerprints.json", &firewall.KnownFingerprints); err != nil {
+	if err := GetFingerprintsLocal("fingerprints/known_fingerprints.json", &firewall.KnownFingerprints); err != nil {
 		panic("[ " + utils.PrimaryColor("!") + " ] [ Error Loading Fingerprints : " + utils.PrimaryColor(err.Error()) + " ]")
 	}
-	if err := GetFingerprints("fingerprints/bot_fingerprints.json", &firewall.BotFingerprints); err != nil {
+	if err := GetFingerprintsLocal("fingerprints/bot_fingerprints.json", &firewall.BotFingerprints); err != nil {
 		panic("[ " + utils.PrimaryColor("!") + " ] [ Error Loading Fingerprints : " + utils.PrimaryColor(err.Error()) + " ]")
 	}
-	if err := GetFingerprints("fingerprints/malicious_fingerprints.json", &firewall.ForbiddenFingerprints); err != nil {
+	if err := GetFingerprintsLocal("fingerprints/malicious_fingerprints.json", &firewall.ForbiddenFingerprints); err != nil {
 		panic("[ " + utils.PrimaryColor("!") + " ] [ Error Loading Fingerprints : " + utils.PrimaryColor(err.Error()) + " ]")
 	}
 
@@ -247,7 +247,6 @@ func Load() {
 	if len(domains.Domains) == 0 {
 		AddDomain()
 		Load()
-		LoadIpWhitelist()
 	} else {
 		proxy.WatchedDomain = domains.Domains[0]
 		db.Connect()

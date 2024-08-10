@@ -94,6 +94,7 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 		settingsQuery, _ = domains.DomainsMap.Load(domainName)
 		domainSettings = settingsQuery.(domains.DomainSettings)
 		ForwardRequest(writer, request, domainSettings, ip, tlsFp, browser, botFp)
+		return
 	}
 
 	firewall.Mutex.Lock()
@@ -385,6 +386,14 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	ForwardRequest(writer, request, domainSettings, ip, tlsFp, browser, botFp)
+}
+
+func ForwardRequest(writer http.ResponseWriter, request *http.Request,
+	domainSettings domains.DomainSettings, ip string, tlsFp string,
+	browser string, botFp string) {
+
+	// Api V2 for whitelisted ips
 	if strings.HasPrefix(request.URL.Path, "/_bProxy/api/v2") {
 		result := api.ProcessV2(writer, request)
 		if result {
@@ -392,12 +401,6 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	ForwardRequest(writer, request, domainSettings, ip, tlsFp, browser, botFp)
-}
-
-func ForwardRequest(writer http.ResponseWriter, request *http.Request,
-	domainSettings domains.DomainSettings, ip string, tlsFp string,
-	browser string, botFp string) {
 	// Fix allow backend to read ip
 	request.Header.Add("X-Forwarded-For", ip)
 

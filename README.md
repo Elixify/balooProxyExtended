@@ -80,6 +80,8 @@ You can run the proxy as a [service](https://abhinand05.medium.com/run-any-execu
 
 ## **How to install as service (Recommended)**
 This is an example, make sure to use the correct paths
+
+**Make sure to set `disable_monitor` to `true` in the config**
 ```bash
 sudo cp balooproxycap.service /etc/systemd/system/balooproxycap.service
 sudo cp balooproxy.service /etc/systemd/system/balooproxy.service
@@ -100,9 +102,6 @@ The container ID can be obtained by running `docker ps`. To detach from the term
 ## **DNS Setup**
 
 The proxy is now successfully running, however you still need to point your dns records to the proxy. To do so get the servers ip the proxy is currently running on. Go to your dns management and point the domain you want to proxy to the proxy ip via an `A` record, if the ip is an ipv4 or an `AAAA` record, if the ip is an ipv6. If you chose to use the proxy with Cloudflare, make sure the option "`Proxy status`" is set to "`Proxied`". If you chose not to use Cloudflare but are managing the dns via Cloudflare, make sure "`Proxy status`" is set to "`DNS only`". Also make sure no other records are pointing to your actual backend, since the proxy can otherwise be bypassed by attacking the backend directly, without first going through the proxy. After you did all of that wait ~10 minutes for the dns entry to register. You can check if your domain is successfully proxied by opening a new tab in the browser of your choice, opening dev tools, navigating to the network tab, opening your website, and searching for a "`baloo-proxy`" header in "Response Headers" of your request. If that exist, you successfully setup balooProxy
-
-![DNS Example](https://cdn.discordapp.com/attachments/1007957829795201116/1094910870372483072/image.png)
-![Network Tab](https://cdn.discordapp.com/attachments/1007957829795201116/1094912722174492672/image.png)
 
 
 ## **Configuration**

@@ -34,6 +34,9 @@ func main() {
 	fmt.Println("Starting Proxy ...")
 
 	config.Load()
+	if err := config.LoadIpWhitelist(); err != nil {
+		fmt.Println("Error while loading whitelist: " + err.Error())
+	}
 
 	fmt.Println("Loaded Config ...")
 
