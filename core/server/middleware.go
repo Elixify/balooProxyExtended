@@ -115,7 +115,7 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 	var blockTxt = "Blocked.\n"
 	var nameTxt = ""
 	if !proxy.Stealth {
-		writer.Header().Set("baloo-Proxy", "1.5")
+		writer.Header().Set("baloo-Proxy", strconv.FormatFloat(proxy.ProxyVersion, 'f', 2, 64))
 		blockTxt = "Blocked by BalooProxy.\n"
 		nameTxt = "BalooProxy "
 	}
