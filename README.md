@@ -8,9 +8,10 @@ This fork aims to fix and improve on all these shortcomings making it a software
 ## Differences from original
 - **Stealth mode:** Hides all references of "balooProxy" from clients. Configurable
 - **Daemon mode:** Disables monitor (console) output. This pegged one cpu at 100% when run as service. Configurable
-- **Removed HTTP 5xx "Intermission":** By default balooProxy shows its own error page instead of the backends. This just forwards the backend's error page
+- **Removed HTTP 5xx "Intermission":** By default balooProxy shows its own error page instead of the backend's. This just forwards the backend's error page
+- **Removed Version Check:** By default the proxy runs a version check to github, prompts you to update if needed and runs a timeout. It also shuts the program down in case the check fails. Since I'm running this as a Daemon the check has been removed to improve reliability.
 - **X-Forwarded-For:** Sends this header to the backend
-- **Load fingerprint Locally:** Loads tls fingerprints locally instead of querying github
+- **Load fingerprints Locally:** Loads tls fingerprints locally instead of querying github. Like version check this has been done as a matter of reliability.
 - **IP Whitelist:** Even tho balooproxy has firewall rules they only run after some initial rate limiting checks. This fork reads an `ipwhitelist.conf` file and **completely** whitelists those ips.
 
 ## Examples
