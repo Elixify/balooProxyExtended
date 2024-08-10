@@ -8,6 +8,7 @@ import (
 	"goProxy/core/utils"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -114,6 +115,25 @@ func GetFingerprints(url string, target *map[string]string) error {
 	err = json.Unmarshal(body, &target)
 	if err != nil {
 		return errors.New("failed to fetch fingerprints: " + err.Error())
+	}
+	return nil
+}
+
+func GetFingerprintsLocal(filePath string, target *map[string]string) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return errors.New("failed to open fingerprint file: " + err.Error())
+	}
+	defer file.Close()
+
+	body, err := ioutil.ReadAll(file)
+	if err != nil {
+		return errors.New("failed to read fingerprint file: " + err.Error())
+	}
+
+	err = json.Unmarshal(body, &target)
+	if err != nil {
+		return errors.New("failed to unmarshal fingerprints: " + err.Error())
 	}
 	return nil
 }

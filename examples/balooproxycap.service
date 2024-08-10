@@ -1,0 +1,11 @@
+[Unit]
+Description=Set capabilities on balooproxy
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/setcap 'cap_net_bind_service=+ep' /home/baloo/proxy/main.linux-amd64
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

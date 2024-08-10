@@ -15,8 +15,9 @@ var (
 	Cloudflare    bool
 	MaxLogLength  int
 
-	Stealth bool
+	Stealth        bool
 	DisableMonitor bool
+	IPWhitelist    map[string]struct{}
 
 	CpuUsage string
 	RamUsage string

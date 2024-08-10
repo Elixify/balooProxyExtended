@@ -1,3 +1,26 @@
+# About this Fork
+
+## Why?
+Original balooProxy is a great DDoS protection but it has many shortcomings that make it not production ready. 
+
+This fork aims to fix and improve on all these shortcomings making it a software that I'm able to actually run in production.
+
+## Differences from original
+- **Stealth mode:** Hides all references of "balooProxy" from clients. Configurable
+- **Daemon mode:** Disables monitor (console) output. This pegged one cpu at 100% when run as service. Configurable
+- **Removed HTTP 5xx "Intermission":** By default balooProxy shows its own error page instead of the backends. This just forwards the backend's error page
+- **X-Forwarded-For:** Sends this header to the backend
+- **Load fingerprint Locally:** Loads tls fingerprints locally instead of querying github
+- **IP Whitelist:** Even tho balooproxy has firewall rules they only run after some initial rate limiting checks. This fork reads an `ipwhitelist.conf` file and **completely** whitelists those ips.
+
+## Examples
+
+Please find example files:
+- [IP Whitelist](examples/ipwhitelist.conf)
+- [Config](examples/config.json)
+- [Capabilities Service](examples/balooproxycap.service) - Sets capabilities to run the program as non-root on linux
+- [Service File](examples/balooproxy.service) - Systemd service file to run as daemon. Make sure to set `disable_monitor` to `true` in the config
+
 # **Features**
 
 ## **TLS-Fingerprinting**
@@ -24,21 +47,17 @@ The PoW JS challenge allows you to reliably block slightly more advanced bots wh
 - Difficulty 2: ~0.215 Seconds
 - Difficulty 1: ~0.212 Seconds
 
-![Pow JS Challenge](https://cdn.discordapp.com/attachments/980872824577216532/1250383254171680830/image.png)
 
 ### **Custom Captcha**
 
 The custom captcha should be your last resort or be used to protect especially weak webpages.
 
-![Custom Captcha](https://cdn.discordapp.com/attachments/847520565606613042/1061764715577098250/image.png)
 
 ## **DDoS Alerts**
 
 Always be informed when you are under attack of a (D)DoS attack with customisable discord alerts.
 
-![Discord Attack Alerts](https://cdn.discordapp.com/attachments/1055573537148108941/1077581121832878140/image.png)
-
-For more information on how to customise discord alerts refeer to 
+For more information on how to customise discord alerts refer to sample config
 
 ## **Lightweight**
 
@@ -57,7 +76,22 @@ To start, download the [latest version of balooProxy](https://github.com/41Baloo
 If you already have a `config.json` drag it in the same folder in your server as the `main` you downloaded/compiled. If you do not, simply start balooProxy by running `./main` and answer the questions the proxy asks you. After you answered those questions stop the proxy with `ctrl + c`.
 
 # **Running**
-You can run the proxy as a [service](https://abhinand05.medium.com/run-any-executable-as-systemd-service-in-linux-21298674f66f) or inside of a screen. To run the proxy inside a screen on ubuntu/debian first run `apt update`. After that is done install screen by running `apt install screen` and follow its installation process. To start running the proxy inside of a screen run `screen -S balooProxy`. This will put you inside a screen, making sure the proxy keeps running even when you log out of ssh. Now just start the proxy inside the screen by running `./main` (make sure the proxy isnt running anywhere else already) and quit the screen by pressing `ctrl + a + d`. You can always reopen the screen by running `screen -d -r`
+You can run the proxy as a [service](https://abhinand05.medium.com/run-any-executable-as-systemd-service-in-linux-21298674f66f) or inside of a screen. 
+
+## **How to install as service (Recommended)**
+This is an example, make sure to use the correct paths
+```bash
+sudo cp balooproxycap.service /etc/systemd/system/balooproxycap.service
+sudo cp balooproxy.service /etc/systemd/system/balooproxy.service
+sudo systemctl daemon-reload
+sudo systemctl enable balooproxycap.service
+sudo systemctl enable balooproxy.service
+sudo systemctl start balooproxycap.service
+sudo systemctl start balooproxy.service
+```
+## **How to run in screen (Not recommended)**
+
+To run the proxy inside a screen on ubuntu/debian first run `apt update`. After that is done install screen by running `apt install screen` and follow its installation process. To start running the proxy inside of a screen run `screen -S balooProxy`. This will put you inside a screen, making sure the proxy keeps running even when you log out of ssh. Now just start the proxy inside the screen by running `./main` (make sure the proxy isnt running anywhere else already) and quit the screen by pressing `ctrl + a + d`. You can always reopen the screen by running `screen -d -r`
 
 # **Docker Setup**
 To use balooProxy with Docker, start by executing the `./main` file to generate a config.json. Next, build the Docker image by running `docker build -t baloo-proxy .` in the same folder as the main file. Once the build is complete, run the Docker image using `docker run -d -p 80:80 -p 443:443 -t baloo-proxy`. To access the terminal of the Docker image, use `docker attach CONTAINERID`.
@@ -72,12 +106,12 @@ The proxy is now successfully running, however you still need to point your dns 
 
 
 ## **Configuration**
----
+
 
 The `config.json` allows you to change several features and values about balooProxy. There are three main fields, `proxy`, `domains` and `rules`.
 
 ### **Proxy**
----
+
 
 This field specifically allows you to change general settings about balooProxy
 
@@ -89,6 +123,14 @@ If this field is set to true balooProxy will be in cloudflare mode.
 ### `maxLogLength` <sup>Int</sup>
 
 This field sets the amount of logs entires shown in the ssh terminal
+
+### `stealth` <sup>Bool</sup>
+
+If `true` all references to balooproxy (and some internal pages) will be disabled
+
+### `disable_monitor` <sup>Bool</sup>
+
+If `true` the monitor (console) output will be disabled. If left enabled it pegs one cpu at 100% when run as a service.
 
 ### `secret` <sup>Map[String]String</sup>
 
@@ -107,7 +149,7 @@ This field allows you to set the different ratelimit values
 **`noRequestsSent`**: Amount of times a single ip can open a tcp connection without making http requests
 
 ### **Domains**
----
+
 
 This field specifically allows you to change settings for a specific domain
 
@@ -146,14 +188,13 @@ This field allows you to customise/enable discord DDoS alert notifications. It s
 **`attack_end_msg`**: The message the alert should send when your domain is no longer under attack. Notice: you can use placeholders, like `{{domain.name}}`, `{{attack.start}}`, `{{attack.end}}`, `{{proxy.cpu}}` and `{{proxy.ram}}` here
 
 ### **Firewall Rules**
----
+
 
 Refer to [Custom Firewall Rules](#Custom-Firewall-Rules)
 
 # **Terminal**
 
 ## **Main Hud**
----
 
 The main hud shows you different information about your proxy
 
@@ -186,7 +227,7 @@ Shows the current amount of open L4 connections to balooProxy
 Shows information about the last requests that passed balooProxy (The amount can be specified in `config.json`)
 
 ## **Commands**
----
+
 
 The terminal allows you to input commands which change the behaviour of balooProxy
 
@@ -216,7 +257,7 @@ The command `reload` will cause the proxy to read the config.json again, aswell 
 Thanks to [gofilter]("https://github.com/kor44/gofilter") balooProxy allows you to add your own firewall rules by using a ruleset engine based on [wireguards display filter expressions](https://www.wireshark.org/docs/wsug_html_chunked/ChWorkBuildDisplayFilterSection.html)
 
 ## **Fields**
----
+
 
 ### `ip.src` <sup>IP</sup>
 
@@ -303,7 +344,7 @@ Represents the number of currently incoming requests per second
 Represents the number of currently incoming requests per second forwarded to the backend
 
 ## **Comparison Operatos**
----
+
 
 Check if two values are identical
 
@@ -365,7 +406,7 @@ Check if value to the right is bigger or equal to the value to the left
 ```
 
 ## **Logical Operators**
----
+
 
 Require both comparisons to return true
 
@@ -397,7 +438,7 @@ not(http.path eq "/" && http.query eq "")
 ```
 
 ## **Search / Match Operators**
----
+
 
 
 Returns true if field contains value
@@ -416,7 +457,7 @@ Returns true if field matches a regex expression
 ```
 
 ## **Structure**
----
+
 
 Firewall rules are build in the `config.json` and have the following structure
 
@@ -436,13 +477,13 @@ Firewall rules are build in the `config.json` and have the following structure
 Every individual has to have the `expression` and `action` field.
 
 ## **Priority**
----
+
 Rules are priorities from top to bottom in the `config.json`. A role has priority over every rule coming after it in the json.
 
 (**Note**: As will later be described, some rules will stop balooProxy from checking for other matching rules. This is why it is recommended to have rules with higher `action` values be higher in the json aswell.)
 
 ## **Actions**
----
+
 
 The resulting action to a rule is decided based on the `"susLv"`, which is a scale from `0`-`3` how suspicious/malicious the request is. The `susLv` itself starts of at the current `stage` balooProxy is in. This is normally `1` but might change to `2` and `3` depending on how many bypassing requests balooProxy currently experiences.
 
@@ -469,7 +510,7 @@ The request will be challenged with a visual captcha. The user will have to inpu
 Every request with a susLv of 4 or higher will be blocked
 
 ## **Adding Actions**
----
+
 You can set a rules action to be a specific action by setting it's `action` to a specific number 
 
 (**Note**: If a rule matches a request and sets the `action` to a specific number balooProxy will not check for other matching rules. Hence you should usually give rules with a higher `action` value a lower `priority` value aswell).

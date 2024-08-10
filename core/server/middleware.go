@@ -85,6 +85,17 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 		botFp = firewall.BotFingerprints[tlsFp]
 	}
 
+	var settingsQuery any
+	var domainSettings domains.DomainSettings
+
+	// Real IP whitelist
+	if _, exists := proxy.IPWhitelist[ip]; exists {
+		// Init these later if not in whitelist
+		settingsQuery, _ = domains.DomainsMap.Load(domainName)
+		domainSettings = settingsQuery.(domains.DomainSettings)
+		ForwardRequest(writer, request, domainSettings, ip, tlsFp, browser, botFp)
+	}
+
 	firewall.Mutex.Lock()
 	// Leaving this here for future reference. When the monitor thread that's supposed to prefill these maps lags
 	//behind for some reason, this will be come really messy. The mutex will be locked and never unlocked again,
@@ -114,14 +125,14 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 	//Ratelimit faster if client repeatedly fails the verification challenge (feel free to play around with the threshhold)
 	if ipCountCookie > proxy.FailChallengeRatelimit {
 		writer.Header().Set("Content-Type", "text/plain")
-		SendResponse(blockTxt + "You have been ratelimited. (R1)", buffer, writer)
+		SendResponse(blockTxt+"You have been ratelimited. (R1)", buffer, writer)
 		return
 	}
 
 	//Ratelimit spamming Ips (feel free to play around with the threshhold)
 	if ipCount > proxy.IPRatelimit {
 		writer.Header().Set("Content-Type", "text/plain")
-		SendResponse(blockTxt + "You have been ratelimited. (R2)", buffer, writer)
+		SendResponse(blockTxt+"You have been ratelimited. (R2)", buffer, writer)
 		return
 	}
 
@@ -129,7 +140,7 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 	if browser == "" {
 		if fpCount > proxy.FPRatelimit {
 			writer.Header().Set("Content-Type", "text/plain")
-			SendResponse(blockTxt + "You have been ratelimited. (R3)", buffer, writer)
+			SendResponse(blockTxt+"You have been ratelimited. (R3)", buffer, writer)
 			return
 		}
 
@@ -142,15 +153,16 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 	forbiddenFp := firewall.ForbiddenFingerprints[tlsFp]
 	if forbiddenFp != "" {
 		writer.Header().Set("Content-Type", "text/plain")
-		SendResponse(blockTxt + "Your browser "+forbiddenFp+" is not allowed.", buffer, writer)
+		SendResponse(blockTxt+"Your browser "+forbiddenFp+" is not allowed.", buffer, writer)
 		return
 	}
 
 	//Demonstration of how to use "susLv". Essentially allows you to challenge specific requests with a higher challenge
 
+	// Setting these after initial check
 	//SyncMap because semi-readonly
-	settingsQuery, _ := domains.DomainsMap.Load(domainName)
-	domainSettings := settingsQuery.(domains.DomainSettings)
+	settingsQuery, _ = domains.DomainsMap.Load(domainName)
+	domainSettings = settingsQuery.(domains.DomainSettings)
 
 	ipInfoCountry := "N/A"
 	ipInfoASN := "N/A"
@@ -213,7 +225,7 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 			encryptedIP = utils.Encrypt(accessKey, proxy.CaptchaOTP)
 		default:
 			writer.Header().Set("Content-Type", "text/plain")
-			SendResponse(blockTxt + "Suspicious request of level "+susLvStr+" (base "+strconv.Itoa(domainData.Stage)+")", buffer, writer)
+			SendResponse(blockTxt+"Suspicious request of level "+susLvStr+" (base "+strconv.Itoa(domainData.Stage)+")", buffer, writer)
 			return
 		}
 		firewall.CacheIps.Store(accessKey+susLvStr, encryptedIP)
@@ -288,11 +300,11 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 
 				var captchaBuf, maskBuf bytes.Buffer
 				if err := png.Encode(&captchaBuf, captchaImg); err != nil {
-					SendResponse(nameTxt + "Error: Failed to encode captcha: "+err.Error(), buffer, writer)
+					SendResponse(nameTxt+"Error: Failed to encode captcha: "+err.Error(), buffer, writer)
 					return
 				}
 				if err := png.Encode(&maskBuf, maskImg); err != nil {
-					SendResponse(nameTxt + "Error: Failed to encode captchaMask: "+err.Error(), buffer, writer)
+					SendResponse(nameTxt+"Error: Failed to encode captchaMask: "+err.Error(), buffer, writer)
 					return
 				}
 
@@ -312,7 +324,7 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 			return
 		default:
 			writer.Header().Set("Content-Type", "text/plain")
-			SendResponse(blockTxt + "Suspicious request of level "+susLvStr, buffer, writer)
+			SendResponse(blockTxt+"Suspicious request of level "+susLvStr, buffer, writer)
 			return
 		}
 	}
@@ -362,7 +374,6 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 			return
 		}
 
-	
 	//Do not remove or modify this. It is required by the license
 	// Nope, GPL can't impose this
 	case "/_bProxy/credits":
@@ -381,8 +392,17 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	//Allow backend to read client information
-	request.Header.Add("x-real-ip", ip)
+	ForwardRequest(writer, request, domainSettings, ip, tlsFp, browser, botFp)
+}
+
+func ForwardRequest(writer http.ResponseWriter, request *http.Request,
+	domainSettings domains.DomainSettings, ip string, tlsFp string,
+	browser string, botFp string) {
+	// Fix allow backend to read ip
+	request.Header.Add("X-Forwarded-For", ip)
+
+	// Leaving these for compatibility
+	request.Header.Add("X-Real-IP", ip)
 	request.Header.Add("proxy-real-ip", ip)
 	request.Header.Add("proxy-tls-fp", tlsFp)
 	request.Header.Add("proxy-tls-name", browser+botFp)

@@ -150,7 +150,8 @@ func (rt *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 
 	//Connection was successfull, got bad response tho
-	if resp.StatusCode > 499 && resp.StatusCode < 600 {
+	// Kinda pointless
+	/* if resp.StatusCode > 499 && resp.StatusCode < 600 {
 
 		limitReader := io.LimitReader(resp.Body, 1024*1024) // 1 MB for instance
 		errBody, errErr := io.ReadAll(limitReader)
@@ -190,7 +191,7 @@ func (rt *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewReader(buffer.Bytes())),
 		}, nil
-	}
+	} */
 
 	return resp, nil
 }

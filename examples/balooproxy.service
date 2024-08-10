@@ -1,0 +1,17 @@
+[Unit]
+Description=Baloo
+Requires=balooproxycap.service
+After=balooproxycap.service
+
+[Service]
+User=baloo
+Type=simple
+ExecStart=/home/baloo/proxy/main.linux-amd64
+Restart=always
+RestartSec=5
+WorkingDirectory=/home/baloo/proxy
+StandardOutput=null
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target
