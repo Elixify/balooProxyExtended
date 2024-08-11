@@ -41,7 +41,7 @@ jobs:
           go build -ldflags "-X 'main.Fingerprint=${{ env.uuid }}'" -o dist/${FILENAME}
           mkdir -p dist/tempdir/fingerprints
           mv dist/${FILENAME} dist/tempdir/
-          cp -r global/fingerprints dist/tempdir/fingerprints/
+          cp -r global/fingerprints dist/tempdir/
           (cd dist/tempdir && zip -r ../${FILENAME}.zip .)
           rm -rf dist/tempdir
 
