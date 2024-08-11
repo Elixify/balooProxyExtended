@@ -67,5 +67,5 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "latest"
           prerelease: true
-          title: "Nightly ${{ env.uuid }}"
+          title: "Nightly ${{ env.DATETIME }}"
           files: /home/runner/work/balooProxy/balooProxy/*.zip
