@@ -1,4 +1,4 @@
-name: "GO Linux Release"
+name: "GO Linux, Windows, and macOS Multi-Arch Release"
 
 on:
   push:
@@ -14,6 +14,9 @@ jobs:
       - name: "Checkout code"
         uses: actions/checkout@v4
 
+      - name: "Install zip"
+        run: sudo apt-get update && sudo apt-get install -y zip
+
       - name: "Set up Go"
         uses: actions/setup-go@v2
         with:
@@ -26,8 +29,35 @@ jobs:
         id: uuid
         run: echo "uuid=$(uuidgen)" >> $GITHUB_ENV
 
-      - name: "Build with UUID"
-        run: go build -ldflags "-X 'main.Fingerprint=${{ env.uuid }}'" -o dist/main
+      - name: "Build for Linux (amd64) with UUID"
+        run: |
+          GOOS=linux GOARCH=amd64 go build -ldflags "-X 'main.Fingerprint=${{ env.uuid }}'" -o dist/main.linux-amd64
+          zip dist/main.linux-amd64.zip dist/main.linux-amd64 global/fingerprints/*
+
+      - name: "Build for Linux (arm64) with UUID"
+        run: |
+          GOOS=linux GOARCH=arm64 go build -ldflags "-X 'main.Fingerprint=${{ env.uuid }}'" -o dist/main.linux-arm64
+          zip dist/main.linux-arm64.zip dist/main.linux-arm64 global/fingerprints/*
+
+      - name: "Build for Windows (amd64) with UUID"
+        run: |
+          GOOS=windows GOARCH=amd64 go build -ldflags "-X 'main.Fingerprint=${{ env.uuid }}'" -o dist/main.windows-amd64.exe
+          zip dist/main.windows-amd64.zip dist/main.windows-amd64.exe global/fingerprints/*
+
+      - name: "Build for Windows (arm64) with UUID"
+        run: |
+          GOOS=windows GOARCH=arm64 go build -ldflags "-X 'main.Fingerprint=${{ env.uuid }}'" -o dist/main.windows-arm64.exe
+          zip dist/main.windows-arm64.zip dist/main.windows-arm64.exe global/fingerprints/*
+
+      - name: "Build for macOS (amd64) with UUID"
+        run: |
+          GOOS=darwin GOARCH=amd64 go build -ldflags "-X 'main.Fingerprint=${{ env.uuid }}'" -o dist/main.darwin-amd64
+          zip dist/main.darwin-amd64.zip dist/main.darwin-amd64 global/fingerprints/*
+
+      - name: "Build for macOS (arm64) with UUID"
+        run: |
+          GOOS=darwin GOARCH=arm64 go build -ldflags "-X 'main.Fingerprint=${{ env.uuid }}'" -o dist/main.darwin-arm64
+          zip dist/main.darwin-arm64.zip dist/main.darwin-arm64 global/fingerprints/*
 
       - name: "Release"
         uses: marvinpinto/action-automatic-releases@latest
@@ -35,9 +65,14 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "latest"
           prerelease: true
-          title: "Prerelease ${{ env.uuid }}"
+          title: "Nightly ${{ env.uuid }}"
           files: |
-            dist/main
+            dist/main.linux-amd64.zip
+            dist/main.linux-arm64.zip
+            dist/main.windows-amd64.zip
+            dist/main.windows-arm64.zip
+            dist/main.darwin-amd64.zip
+            dist/main.darwin-arm64.zip
           body: |
             This is an automatic build that might have bugs.
             Release Tag: ${{ env.uuid }}

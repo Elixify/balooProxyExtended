@@ -30,24 +30,38 @@ echo Cross-compiling for all OSes...
 
 REM Windows
 echo Building for Windows...
+
 set GOOS=windows
 set GOARCH=amd64
 go build -o %OUT_DIR%\%BINARY_NAME%.windows-amd64.exe %SRC_DIR%
+
+set GOOS=windows
+set GOARCH=arm64
+go build -o %OUT_DIR%\%BINARY_NAME%.windows-arm64.exe %SRC_DIR%
 if errorlevel 1 goto :error
 
 REM Linux
 echo Building for Linux...
+
 set GOOS=linux
 set GOARCH=amd64
 go build -o %OUT_DIR%\%BINARY_NAME%.linux-amd64 %SRC_DIR%
+
+set GOOS=linux
+set GOARCH=arm64
+go build -o %OUT_DIR%\%BINARY_NAME%.linux-arm64 %SRC_DIR%
 if errorlevel 1 goto :error
 
 REM macOS
-REM echo Building for macOS...
-REM set GOOS=darwin
-REM set GOARCH=amd64
-REM go build -o %OUT_DIR%\%BINARY_NAME%.darwin-amd64 %SRC_DIR%
-REM if errorlevel 1 goto :error
+echo Building for macOS...
+set GOOS=darwin
+set GOARCH=amd64
+go build -o %OUT_DIR%\%BINARY_NAME%.darwin-amd64 %SRC_DIR%
+
+set GOOS=darwin
+set GOARCH=arm64
+go build -o %OUT_DIR%\%BINARY_NAME%.darwin-arm64 %SRC_DIR%
+if errorlevel 1 goto :error
 
 REM Copy fingerprint files
 xcopy /Y /E %FINGERPRINTS_DIR%\* %OUT_DIR%\fingerprints\
