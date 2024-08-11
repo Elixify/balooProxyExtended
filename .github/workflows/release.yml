@@ -68,7 +68,4 @@ jobs:
           automatic_release_tag: "latest"
           prerelease: true
           title: "Nightly ${{ env.uuid }}"
-          files: dist/*.zip
-          body: |
-            This is an automatic build that might have bugs.
-            Release Tag: ${{ env.uuid }}
+          files: /home/runner/work/balooProxy/balooProxy/*.zip
