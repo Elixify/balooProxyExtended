@@ -51,6 +51,9 @@ func Monitor() {
 	//Responsible for keeping track of ratelimit
 	go evaluateRatelimit()
 
+	// Responsible for rate limit timeouts and attack detection
+	go monitorUpdate()
+
 	// Print code below
 	if proxy.DisableMonitor {
 		fmt.Println("Monitor running in background ...")
@@ -90,12 +93,6 @@ func Monitor() {
 		}
 		utils.ClearScreen(proxy.MaxLogLength)
 		fmt.Print("\033[1;1H")
-
-		firewall.Mutex.Lock()
-		for name, data := range domains.DomainsData {
-			checkAttack(name, data)
-		}
-		firewall.Mutex.Unlock()
 
 		printStats()
 
@@ -215,13 +212,6 @@ func checkAttack(domainName string, domainData domains.DomainData) {
 }
 
 func printStats() {
-
-	proxy.LastSecondTime = time.Now()
-	proxy.LastSecondTimeFormated = proxy.LastSecondTime.Format("15:04:05")
-	proxy.LastSecondTimestamp = int(proxy.LastSecondTime.Unix())
-	proxy.Last10SecondTimestamp = utils.TrimTime(proxy.LastSecondTimestamp)
-	proxy.CurrHour, _, _ = proxy.LastSecondTime.Clock()
-	proxy.CurrHourStr = strconv.Itoa(proxy.CurrHour)
 
 	result, err := cpu.Percent(0, false)
 	if err != nil {
@@ -647,6 +637,25 @@ func evaluateRatelimit() {
 		//log.Printf("I Ran. I'm supposed to run every 5 seconds. If that didn't happen we're in deep shit")
 		time.Sleep(5 * time.Second)
 
+	}
+}
+
+func monitorUpdate() {
+	for {
+		proxy.LastSecondTime = time.Now()
+		proxy.LastSecondTimeFormated = proxy.LastSecondTime.Format("15:04:05")
+		proxy.LastSecondTimestamp = int(proxy.LastSecondTime.Unix())
+		proxy.Last10SecondTimestamp = utils.TrimTime(proxy.LastSecondTimestamp)
+		proxy.CurrHour, _, _ = proxy.LastSecondTime.Clock()
+		proxy.CurrHourStr = strconv.Itoa(proxy.CurrHour)
+
+		firewall.Mutex.Lock()
+		for name, data := range domains.DomainsData {
+			checkAttack(name, data)
+		}
+		firewall.Mutex.Unlock()
+
+		time.Sleep(1 * time.Second)
 	}
 }
 
