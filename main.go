@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"goProxy/core/config"
 	"goProxy/core/pnc"
@@ -17,6 +18,14 @@ var Fingerprint string = "S3LF_BU1LD_0R_M0D1F13D" // 455b9300-0a6f-48f1-82ee-bb1
 func main() {
 
 	proxy.Fingerprint = Fingerprint
+
+	// Daemon mode
+	daemon := flag.Bool("daemon", false, "run as daemon")
+	dFlag := flag.Bool("d", false, "run as daemon (shorthand)")
+	flag.Parse()
+	if *dFlag || *daemon {
+		proxy.DisableMonitor = true
+	}
 
 	logFile, err := os.OpenFile("crash.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {

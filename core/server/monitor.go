@@ -443,7 +443,6 @@ func ReloadConfig() {
 	proxy.FailRequestRatelimit = domains.Config.Proxy.Ratelimits["noRequestsSent"]
 
 	proxy.Stealth = domains.Config.Proxy.Stealth
-	proxy.DisableMonitor = domains.Config.Proxy.DisableMonitor
 
 	for i, domain := range domains.Config.Domains {
 		domains.Domains = append(domains.Domains, domain.Name)

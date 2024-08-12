@@ -7,7 +7,7 @@ This fork aims to fix and improve on all these shortcomings making it a software
 
 ## Differences from original
 - **Stealth mode:** Hides all references of "balooProxy" from clients. Configurable
-- **Daemon mode:** Disables monitor (console) output. This pegged one cpu at 100% when run as service. Configurable
+- **Daemon mode:** Disables monitor (console) output. This pegged one cpu at 100% when run as service. Use `-d` flag to enable.
 - **Removed HTTP 5xx "Intermission":** By default balooProxy shows its own error page instead of the backend's. This just forwards the backend's error page
 - **Removed Version Check:** By default the proxy runs a version check to github, prompts you to update if needed and runs a timeout. It also shuts the program down in case the check fails. Since I'm running this as a Daemon the check has been removed to improve reliability.
 - **X-Forwarded-For:** Sends this header to the backend
@@ -20,7 +20,7 @@ Please find example files:
 - [IP Whitelist](examples/ipwhitelist.conf)
 - [Config](examples/config.json)
 - [Capabilities Service](examples/balooproxycap.service) - Sets capabilities to run the program as non-root on linux
-- [Service File](examples/balooproxy.service) - Systemd service file to run as daemon. Make sure to set `disable_monitor` to `true` in the config
+- [Service File](examples/balooproxy.service) - Systemd service file to run as daemon
 
 # **Features**
 
@@ -82,7 +82,6 @@ You can run the proxy as a [service](https://abhinand05.medium.com/run-any-execu
 ## **How to install as service (Recommended)**
 This is an example, make sure to use the correct paths
 
-**Make sure to set `disable_monitor` to `true` in the config**
 ```bash
 sudo cp balooproxycap.service /etc/systemd/system/balooproxycap.service
 sudo cp balooproxy.service /etc/systemd/system/balooproxy.service
@@ -127,10 +126,6 @@ This field sets the amount of logs entires shown in the ssh terminal
 ### `stealth` <sup>Bool</sup>
 
 If `true` all references to balooproxy (and some internal pages) will be disabled
-
-### `disable_monitor` <sup>Bool</sup>
-
-If `true` the monitor (console) output will be disabled. If left enabled it pegs one cpu at 100% when run as a service.
 
 ### `secret` <sup>Map[String]String</sup>
 
