@@ -40,8 +40,10 @@ jobs:
           if [ "${GOOS}" = "windows" ]; then FILENAME="${FILENAME}.exe"; fi
           go build -ldflags "-X 'main.Fingerprint=${{ env.uuid }}'" -o dist/${FILENAME}
           mkdir -p dist/tempdir/fingerprints
+          mkdir -p dist/tempdir/html
           mv dist/${FILENAME} dist/tempdir/
           cp -r global/fingerprints dist/tempdir/
+          cp -r assets/html dist/tempdir/
           (cd dist/tempdir && zip -r ../${FILENAME}.zip .)
           rm -rf dist/tempdir
 
