@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/kor44/gofilter"
 )
@@ -267,7 +268,20 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 			maskData := ""
 			captchaCache, captchaExists := firewall.CacheImgs.Load(secretPart)
 
-			if !captchaExists {
+			// Captcha expiration
+			if captchaExists && func() bool {
+				cachedData := captchaCache.([3]string)
+				expirationTime, err := strconv.ParseInt(cachedData[2], 10, 64)
+				if err == nil && time.Now().Unix() > expirationTime {
+					firewall.CacheImgs.Delete(secretPart)
+					return false
+				}
+				return err == nil && time.Now().Unix() <= expirationTime
+			}() {
+				captchaDataTmp := captchaCache.([3]string)
+				captchaData = captchaDataTmp[0]
+				maskData = captchaDataTmp[1]
+			} else {
 				randomShift := rand.Intn(50) - 25
 				captchaImg := image.NewRGBA(image.Rect(0, 0, 100, 37))
 				randomColor := uint8(rand.Intn(255))
@@ -312,11 +326,11 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 				captchaData = base64.StdEncoding.EncodeToString(captchaBuf.Bytes())
 				maskData = base64.StdEncoding.EncodeToString(maskBuf.Bytes())
 
-				firewall.CacheImgs.Store(secretPart, [2]string{captchaData, maskData})
-			} else {
-				captchaDataTmp := captchaCache.([2]string)
-				captchaData = captchaDataTmp[0]
-				maskData = captchaDataTmp[1]
+				// Calculate the expiration timestamp (3 minutes from now)
+				expirationTime := time.Now().Add(1 * time.Minute).Unix()
+				expirationTimeStr := strconv.FormatInt(expirationTime, 10)
+				// Store the captcha data, mask data, and expiration timestamp
+				firewall.CacheImgs.Store(secretPart, [3]string{captchaData, maskData, expirationTimeStr})
 			}
 
 			writer.Header().Set("Content-Type", "text/html")
