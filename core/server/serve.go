@@ -137,11 +137,12 @@ func (rt *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 			}
 		}
 
-		buffer.WriteString(`<!DOCTYPE html><html><head><title>Error: `)
-		buffer.WriteString(errMsg) // Page Title
-		buffer.WriteString(`</title><style>body{font-family:'Helvetica Neue',sans-serif;color:#333;margin:0;padding:0}.container{display:flex;align-items:center;justify-content:center;height:100vh;background:#fafafa}.error-box{width:600px;padding:20px;background:#fff;border-radius:5px;box-shadow:0 2px 4px rgba(0,0,0,.1)}.error-box h1{font-size:36px;margin-bottom:20px}.error-box p{font-size:16px;line-height:1.5;margin-bottom:20px}.error-box p.description{font-style:italic;color:#666}.error-box a{display:inline-block;padding:10px 20px;background:#00b8d4;color:#fff;border-radius:5px;text-decoration:none;font-size:16px}</style><div class=container><div class=error-box><h1>Error: `)
-		buffer.WriteString(errMsg) // Page Body
-		buffer.WriteString(`</h1><p>Sorry, there was an error connecting to the backend. That's all we know.</p><a onclick="location.reload()">Reload page</a></div></div></body></html>`)
+		renderedTemplate, _ := RenderTemplate("html/error_empty.html", map[string]interface{}{
+			"Title":   errMsg,
+			"Message": errMsg,
+		})
+
+		buffer.WriteString(renderedTemplate)
 
 		return &http.Response{
 			StatusCode: http.StatusOK,

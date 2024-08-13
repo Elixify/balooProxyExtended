@@ -6,6 +6,7 @@ set BINARY_NAME=main
 set SRC_DIR=.
 set OUT_DIR=out
 set FINGERPRINTS_DIR=.\global\fingerprints
+set TEMPLATES_DIR=.\assets\html
 
 REM Ensure the output directory exists
 if not exist %OUT_DIR% (
@@ -65,6 +66,7 @@ if errorlevel 1 goto :error
 
 REM Copy fingerprint files
 xcopy /Y /E %FINGERPRINTS_DIR%\* %OUT_DIR%\fingerprints\
+xcopy /Y /E %TEMPLATES_DIR%\* %OUT_DIR%\html\
 if errorlevel 1 goto :error
 
 goto :eof

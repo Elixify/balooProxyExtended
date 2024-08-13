@@ -8,11 +8,14 @@ This fork aims to fix and improve on all these shortcomings making it a software
 ## Differences from original
 - **Stealth mode:** Hides all references of "balooProxy" from clients. Configurable
 - **Daemon mode:** Disables monitor (console) output. This pegged one cpu at 100% when run as service. Use `-d` flag to enable.
+- **IP Whitelist:** Even tho balooproxy has firewall rules they only run after some initial rate limiting checks. This fork reads an `ipwhitelist.conf` file and **completely** whitelists those ips.
+- **HTML Templates:** HTML Templates are present in original balooProxy but are not used. This proxy actually loads them making editing the page easier.
+- **X-Forwarded-For:** Sends this header to the backend
 - **Removed HTTP 5xx "Intermission":** By default balooProxy shows its own error page instead of the backend's. This just forwards the backend's error page
 - **Removed Version Check:** By default the proxy runs a version check to github, prompts you to update if needed and runs a timeout. It also shuts the program down in case the check fails. Since I'm running this as a Daemon the check has been removed to improve reliability.
-- **X-Forwarded-For:** Sends this header to the backend
 - **Load fingerprints Locally:** Loads tls fingerprints locally instead of querying github. This has been done as a matter of reliability and security.
-- **IP Whitelist:** Even tho balooproxy has firewall rules they only run after some initial rate limiting checks. This fork reads an `ipwhitelist.conf` file and **completely** whitelists those ips.
+- **Expiring Captcha Images:** Originally the Captcha image, once generated, refreshes only every hour with the secret token. Here we refresh the image every minute to give users that couldn't read it another chance. Token still refreshes every hour
+
 
 ## Examples
 
