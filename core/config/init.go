@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"goProxy/core/db"
 	"goProxy/core/domains"
@@ -237,11 +236,7 @@ func Load() {
 
 	firewall.Mutex.Unlock()
 
-	//vcErr := VersionCheck()
-	// Why would we even panic because we couldn't check version
-	/* if vcErr != nil {
-		panic("[ " + utils.PrimaryColor("!") + " ] [ " + vcErr.Error() + " ]")
-	} */
+	go VersionCheck()
 
 	if len(domains.Domains) == 0 {
 		AddDomain()
@@ -252,35 +247,27 @@ func Load() {
 	}
 }
 
-func VersionCheck() error {
+func VersionCheck() {
 	resp, err := http.Get("https://raw.githubusercontent.com/Vadhvis/balooProxy/main/global/proxy/version.json")
 	if err != nil {
-		return errors.New("Failed to check for proxy version: " + err.Error())
+		fmt.Println("Failed to check for proxy version: " + err.Error())
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return errors.New("Failed to check for proxy version: " + err.Error())
+		fmt.Println("Failed to check for proxy version: " + err.Error())
 	}
 
 	var proxyVersions GLOBAL_PROXY_VERSIONS
 	err = json.Unmarshal(body, &proxyVersions)
 	if err != nil {
-		return errors.New("Failed to check for proxy version: " + err.Error())
+		fmt.Println("Failed to check for proxy version: " + err.Error())
 	}
 
 	if proxyVersions.StableVersion > proxy.ProxyVersion {
-
-		fmt.Println("[ " + utils.PrimaryColor("!") + " ] [ New Proxy Version " + fmt.Sprint(proxyVersions.StableVersion) + " Found. You Are using " + fmt.Sprint(proxy.ProxyVersion) + ". Consider Downloading The New Version From Github ]")
-
-		// This is supposed to be a service
-		//fmt.Println("[ " + utils.PrimaryColor("+") + " ] [ Automatically Starting Proxy In 10 Seconds ]")
-		//time.Sleep(10 * time.Second)
-
+		fmt.Println("[ " + utils.PrimaryColor("!") + " ] [ New Proxy Version " + fmt.Sprint(proxyVersions.StableVersion) + " Found. You Are using " + fmt.Sprint(proxy.ProxyVersion) + ". Consider downloading the latest version from https://github.com/H1v9/balooProxy/releases]")
 	}
-
-	return nil
 }
 
 func LoadIpWhitelist() error {

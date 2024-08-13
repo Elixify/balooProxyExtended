@@ -12,7 +12,7 @@ This fork aims to fix and improve on all these shortcomings making it a software
 - **HTML Templates:** HTML Templates are present in original balooProxy but are not used. This proxy actually loads them making editing the page easier.
 - **X-Forwarded-For:** Sends this header to the backend
 - **Removed HTTP 5xx "Intermission":** By default balooProxy shows its own error page instead of the backend's. This just forwards the backend's error page
-- **Removed Version Check:** By default the proxy runs a version check to github, prompts you to update if needed and runs a timeout. It also shuts the program down in case the check fails. Since I'm running this as a Daemon the check has been removed to improve reliability.
+- **Reworked Version Check:** By default the proxy runs a version check to github that shuts the program down in case the check fails. This fork just check the version and warns you if a new one is available
 - **Load fingerprints Locally:** Loads tls fingerprints locally instead of querying github. This has been done as a matter of reliability and security.
 - **Expiring Captcha Images:** Originally the Captcha image, once generated, refreshes only every hour with the secret token. Here we refresh the image every minute to give users that couldn't read it another chance. Token still refreshes every hour
 
