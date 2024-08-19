@@ -86,7 +86,11 @@ func Serve() {
 
 			if !domainFound {
 				w.Header().Set("Content-Type", "text/plain")
-				fmt.Fprintf(w, "balooProxy: "+r.Host+" does not exist. If you are the owner please check your config.json if you believe this is a mistake")
+				name := ""
+				if proxy.Stealth {
+					name = "balooProxy: "
+				}
+				fmt.Fprintf(w, name+r.Host+" does not exist. If you are the owner please check your config.json if you believe this is a mistake")
 				return
 			}
 
