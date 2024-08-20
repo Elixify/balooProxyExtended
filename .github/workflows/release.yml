@@ -11,7 +11,7 @@ jobs:
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
-        os: [linux, windows, darwin]
+        os: [linux, windows, darwin, freebsd, openbsd]
         arch: [amd64, arm64]
     steps:
       - name: "Checkout code"
