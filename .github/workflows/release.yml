@@ -71,4 +71,4 @@ jobs:
           automatic_release_tag: "latest"
           prerelease: true
           title: "Nightly ${{ env.NOW }}"
-          files: /home/runner/work/balooProxy/balooProxy/*.zip
+          files: /home/runner/work/balooProxyX/balooProxyX/*.zip
