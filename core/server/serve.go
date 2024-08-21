@@ -88,7 +88,7 @@ func Serve() {
 				w.Header().Set("Content-Type", "text/plain")
 				name := ""
 				if proxy.Stealth {
-					name = "balooProxy: "
+					name = "balooProxyX: "
 				}
 				fmt.Fprintf(w, name+r.Host+" does not exist. If you are the owner please check your config.json if you believe this is a mistake")
 				return

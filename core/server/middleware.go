@@ -117,8 +117,8 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 	var nameTxt = ""
 	if !proxy.Stealth {
 		writer.Header().Set("baloo-Proxy", strconv.FormatFloat(proxy.ProxyVersion, 'f', 2, 64))
-		blockTxt = "Blocked by BalooProxy.\n"
-		nameTxt = "BalooProxy "
+		blockTxt = "Blocked by BalooProxyX.\n"
+		nameTxt = "BalooProxyX "
 	}
 
 	//Start the suspicious level where the stage currently is
@@ -408,7 +408,7 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 			break
 		}
 		writer.Header().Set("Content-Type", "text/plain")
-		SendResponse("BalooProxy; Lightweight http reverse-proxy https://github.com/41Baloo/balooProxy. Protected by GNU GENERAL PUBLIC LICENSE Version 2, June 1991", buffer, writer)
+		SendResponse("BalooProxyX https://github.com/h1v9/balooProxyX;\nBased on BalooProxy: a Lightweight http reverse-proxy https://github.com/41Baloo/balooProxy. Protected by GNU GENERAL PUBLIC LICENSE Version 3, June 2007", buffer, writer)
 		return
 	}
 

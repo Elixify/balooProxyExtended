@@ -3,7 +3,7 @@ package proxy
 import "time"
 
 const (
-	ProxyVersion float64 = 1.6
+	ProxyVersion float64 = 1.61
 )
 
 var (

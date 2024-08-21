@@ -248,7 +248,7 @@ func Load() {
 }
 
 func VersionCheck() {
-	resp, err := http.Get("https://raw.githubusercontent.com/Vadhvis/balooProxy/main/global/proxy/version.json")
+	resp, err := http.Get("https://raw.githubusercontent.com/h1v9/balooProxyX/main/global/proxy/version.json")
 	if err != nil {
 		fmt.Println("Failed to check for proxy version: " + err.Error())
 	}
@@ -266,7 +266,7 @@ func VersionCheck() {
 	}
 
 	if proxyVersions.StableVersion > proxy.ProxyVersion {
-		fmt.Println("[ " + utils.PrimaryColor("!") + " ] [ New Proxy Version " + fmt.Sprint(proxyVersions.StableVersion) + " Found. You Are using " + fmt.Sprint(proxy.ProxyVersion) + ". Consider downloading the latest version from https://github.com/H1v9/balooProxy/releases]")
+		fmt.Println("[ " + utils.PrimaryColor("!") + " ] [ New Proxy Version " + fmt.Sprint(proxyVersions.StableVersion) + " Found. You Are using " + fmt.Sprint(proxy.ProxyVersion) + ". Consider downloading the latest version from https://github.com/H1v9/balooProxyX/releases]")
 	}
 }
 

@@ -36,7 +36,7 @@
             "key": "assets/server/server.key",
             "webhook": {
                 "url": "https://discord.com/api/webhooks/1055573557880569886/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-                "name": "balooProxy",
+                "name": "balooProxyX",
                 "avatar": "https://avatars.githubusercontent.com/u/73783549",
                 "attack_start_msg": "A DDoS attack has been detected against your domain `{{domain.name}}`",
                 "attack_stop_msg": "The DDoS attack against your domain `{{domain.name}}` has stopped"
@@ -74,7 +74,7 @@
             "key": "assets/server/server.key",
             "webhook": {
                 "url": "https://discord.com/api/webhooks/1055573557880569886/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-                "name": "balooProxy",
+                "name": "balooProxyX",
                 "avatar": "https://avatars.githubusercontent.com/u/73783549",
                 "attack_start_msg": "A DDoS attack has been detected against your domain `{{domain.name}}`",
                 "attack_stop_msg": "The DDoS attack against your domain `{{domain.name}}` has stopped"
@@ -112,7 +112,7 @@
             "key": "assets/server/server.key",
             "webhook": {
                 "url": "https://discord.com/api/webhooks/1055573557880569886/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-                "name": "balooProxy",
+                "name": "balooProxyX",
                 "avatar": "https://avatars.githubusercontent.com/u/73783549",
                 "attack_start_msg": "A DDoS attack has been detected against your domain `{{domain.name}}`",
                 "attack_stop_msg": "The DDoS attack against your domain `{{domain.name}}` has stopped"

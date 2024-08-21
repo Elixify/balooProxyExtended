@@ -1,4 +1,4 @@
-# About this Fork
+# About balooProxyX
 
 ## Why?
 Original balooProxy is a great DDoS protection but it has many shortcomings that make it not production ready. 
@@ -6,9 +6,9 @@ Original balooProxy is a great DDoS protection but it has many shortcomings that
 This fork aims to fix and improve on all these shortcomings making it a software that I'm able to actually run in production.
 
 ## Differences from original
-- **Stealth mode:** Hides all references of "balooProxy" from clients. Configurable
+- **Stealth mode:** Hides all references of "balooProxyX" from clients. Configurable
 - **Daemon mode:** Disables monitor (console) output. This pegged one cpu at 100% when run as service. Use `-d` flag to enable.
-- **IP Whitelist:** Even tho balooproxy has firewall rules they only run after some initial rate limiting checks. This fork reads an `ipwhitelist.conf` file and **completely** whitelists those ips.
+- **IP Whitelist:** Even tho balooProxy has firewall rules they only run after some initial rate limiting checks. balooProxyX reads an `ipwhitelist.conf` file and **completely** whitelists those ips.
 - **HTML Templates:** HTML Templates are present in original balooProxy but are not used. This proxy actually loads them making editing the page easier.
 - **X-Forwarded-For:** Sends this header to the backend
 - **Removed HTTP 5xx "Intermission":** By default balooProxy shows its own error page instead of the backend's. This just forwards the backend's error page

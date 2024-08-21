@@ -1,5 +1,5 @@
 [Unit]
-Description=Set capabilities on balooproxy
+Description=Set capabilities on balooproxyX
 After=network.target
 
 [Service]
