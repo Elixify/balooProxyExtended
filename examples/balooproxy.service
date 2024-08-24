@@ -10,8 +10,6 @@ ExecStart=/home/baloo/proxy/main.linux-amd64 -d
 Restart=always
 RestartSec=5
 WorkingDirectory=/home/baloo/proxy
-StandardOutput=null
-StandardError=null
 StandardOutput=journal
 StandardError=journal
 
