@@ -160,7 +160,7 @@ func (rt *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 		}
 
 		errMsgStr := errMsg.String()
-		renderedTemplate, _ := RenderTemplate("html/error_empty.html", map[string]interface{}{
+		renderedTemplate, _ := RenderTemplate("assets/html/error_empty.html", map[string]interface{}{
 			"Title":   errMsgStr,
 			"Message": errMsgStr,
 		})

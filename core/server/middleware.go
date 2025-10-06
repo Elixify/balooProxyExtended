@@ -281,7 +281,7 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 			publicSalt := encryptedIP[:len(encryptedIP)-domainData.Stage2Difficulty]
 			writer.Header().Set("Content-Type", "text/html")
 			writer.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0") // Prevent special(ed) browsers from caching the challenge
-			renderedTemplate, _ := RenderTemplate("html/pow.html", map[string]interface{}{
+			renderedTemplate, _ := RenderTemplate("assets/html/pow.html", map[string]interface{}{
 				"PublicSalt":        publicSalt,
 				"HashedEncryptedIP": hashedEncryptedIP,
 				"Stage2Difficulty":  strconv.Itoa(domainData.Stage2Difficulty),
@@ -364,7 +364,7 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 			writer.Header().Set("Content-Type", "text/html")
 			writer.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0") // Prevent special(ed) browsers from caching the challenge
 
-			renderedTemplate, _ := RenderTemplate("html/captcha.html", map[string]interface{}{
+			renderedTemplate, _ := RenderTemplate("assets/html/captcha.html", map[string]interface{}{
 				"Ip":          ip,
 				"PublicPart":  publicPart,
 				"MaskData":    maskData,
