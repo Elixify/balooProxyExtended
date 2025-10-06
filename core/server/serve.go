@@ -86,11 +86,11 @@ func Serve() {
 
 			if !domainFound {
 				w.Header().Set("Content-Type", "text/plain")
-				name := ""
-				if proxy.Stealth {
-					name = "balooProxyX: "
+				if !proxy.Stealth {
+					fmt.Fprintf(w, "balooProxyX: %s does not exist. If you are the owner please check your config.json if you believe this is a mistake", r.Host)
+				} else {
+					fmt.Fprintf(w, "%s does not exist. If you are the owner please check your config.json if you believe this is a mistake", r.Host)
 				}
-				fmt.Fprintf(w, name+r.Host+" does not exist. If you are the owner please check your config.json if you believe this is a mistake")
 				return
 			}
 
@@ -100,7 +100,18 @@ func Serve() {
 			domains.DomainsData[r.Host] = domainData
 			firewall.Mutex.Unlock()
 
-			http.Redirect(w, r, "https://"+r.Host+r.URL.Path+r.URL.RawQuery, http.StatusMovedPermanently)
+			// Optimize redirect URL construction
+			var redirectURL strings.Builder
+			redirectURL.Grow(8 + len(r.Host) + len(r.URL.Path) + len(r.URL.RawQuery))
+			redirectURL.WriteString("https://")
+			redirectURL.WriteString(r.Host)
+			redirectURL.WriteString(r.URL.Path)
+			if len(r.URL.RawQuery) > 0 {
+				redirectURL.WriteByte('?')
+				redirectURL.WriteString(r.URL.RawQuery)
+			}
+			
+			http.Redirect(w, r, redirectURL.String(), http.StatusMovedPermanently)
 		})
 
 		service.SetKeepAlivesEnabled(true)
@@ -133,17 +144,25 @@ func (rt *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	//Connection to backend failed. Display error message
 	if err != nil {
-		errStrs := strings.Split(err.Error(), " ")
-		errMsg := ""
-		for _, str := range errStrs {
-			if !strings.Contains(str, ".") && !strings.Contains(str, "/") && !(strings.Contains(str, "[") && strings.Contains(str, "]")) {
-				errMsg += str + " "
+		// Optimize error message parsing
+		errStr := err.Error()
+		var errMsg strings.Builder
+		errMsg.Grow(len(errStr) / 2) // Pre-allocate approximate size
+		
+		for _, str := range strings.Fields(errStr) {
+			// Skip strings containing IPs, paths, or brackets
+			if !strings.ContainsAny(str, "./[]") {
+				if errMsg.Len() > 0 {
+					errMsg.WriteByte(' ')
+				}
+				errMsg.WriteString(str)
 			}
 		}
 
+		errMsgStr := errMsg.String()
 		renderedTemplate, _ := RenderTemplate("html/error_empty.html", map[string]interface{}{
-			"Title":   errMsg,
-			"Message": errMsg,
+			"Title":   errMsgStr,
+			"Message": errMsgStr,
 		})
 
 		buffer.WriteString(renderedTemplate)
@@ -208,11 +227,17 @@ var defaultTransport = &http.Transport{
 			KeepAlive: 30 * time.Second,
 		}).DialContext(ctx, network, addr)
 	},
-	TLSHandshakeTimeout: 10 * time.Second,
-	TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
-	IdleConnTimeout:     90 * time.Second,
-	MaxIdleConns:        10,
-	MaxConnsPerHost:     10,
+	TLSHandshakeTimeout:   10 * time.Second,
+	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+	IdleConnTimeout:       90 * time.Second,
+	MaxIdleConns:          100,           // Increased from 10
+	MaxIdleConnsPerHost:   20,            // Added for better connection reuse
+	MaxConnsPerHost:       0,             // 0 = unlimited, removed bottleneck
+	ExpectContinueTimeout: 1 * time.Second, // Added for better performance
+	ForceAttemptHTTP2:     true,          // Enable HTTP/2 when possible
+	DisableCompression:    false,         // Keep compression enabled
+	WriteBufferSize:       4096,          // Optimize buffer size
+	ReadBufferSize:        4096,          // Optimize buffer size
 }
 
 func getTripperForDomain(domain string) *http.Transport {

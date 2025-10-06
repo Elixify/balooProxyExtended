@@ -539,6 +539,8 @@ func clearProxyCache() {
 
 	for {
 		//Clear logs and maps every 2 minutes. (I know this is a lazy way to do it, tho for now it seems to be the most efficient and fast way to go about it)
+		time.Sleep(2 * time.Minute)
+		
 		firewall.Mutex.Lock()
 
 		proxyCpuUsage, pcuErr := strconv.ParseFloat(proxy.CpuUsage, 32)
@@ -552,26 +554,15 @@ func clearProxyCache() {
 		}
 
 		// Only clear if proxy isnt under attack / memory is running out
-		if (proxyCpuUsage < 15 && proxyMemUsage > 25) || proxyMemUsage > 95 {
-			firewall.CacheIps.Range(func(key, value any) bool {
-				firewall.CacheIps.Delete(key)
-				return true
-			})
+		shouldClear := (proxyCpuUsage < 15 && proxyMemUsage > 25) || proxyMemUsage > 95
+		
+		if shouldClear {
+			// More efficient: create new sync.Map instead of deleting all entries
+			firewall.CacheIps = sync.Map{}
+			firewall.CacheImgs = sync.Map{}
 		}
-		// Same for here
-		imgCachelen := 0
-		firewall.CacheImgs.Range(func(key, value any) bool {
-			imgCachelen++
-			return true
-		})
-		if (proxyCpuUsage < 15 && proxyMemUsage > 25) || proxyMemUsage > 95 {
-			firewall.CacheImgs.Range(func(key, value any) bool {
-				firewall.CacheImgs.Delete(key)
-				return true
-			})
-		}
+		
 		firewall.Mutex.Unlock()
-		time.Sleep(2 * time.Minute)
 	}
 }
 

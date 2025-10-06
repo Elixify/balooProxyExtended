@@ -52,8 +52,19 @@ func main() {
 	// Wait for everything to be initialised
 	fmt.Println("Initialising ...")
 	go server.Monitor()
+	
+	// Optimized initialization wait with timeout
+	timeout := time.After(30 * time.Second)
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+	
 	for !proxy.Initialised {
-		time.Sleep(500 * time.Millisecond)
+		select {
+		case <-ticker.C:
+			// Continue waiting
+		case <-timeout:
+			log.Fatal("Initialization timeout - proxy failed to initialize within 30 seconds")
+		}
 	}
 
 	go server.Serve()

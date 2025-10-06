@@ -5,9 +5,20 @@ import (
 	"goProxy/core/db"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/boltdb/bolt"
 )
+
+// Optimized HTTP client for IP info lookups with connection pooling
+var ipInfoClient = &http.Client{
+	Timeout: 5 * time.Second,
+	Transport: &http.Transport{
+		MaxIdleConns:        10,
+		MaxIdleConnsPerHost: 5,
+		IdleConnTimeout:     90 * time.Second,
+	},
+}
 
 type IPInfo struct {
 	Country struct {
@@ -38,8 +49,8 @@ func GetIpInfo(IP string) (country string, asn string) {
 		return string(ipCountry), string(ipAsn)
 	}
 
-	//If not, request it
-	resp, err := http.Get("http://apimon.de/ip/" + IP)
+	//If not, request it using optimized client
+	resp, err := ipInfoClient.Get("http://apimon.de/ip/" + IP)
 	if err != nil {
 		return "UNK", "UNK"
 	}

@@ -3,9 +3,20 @@ package utils
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"hash"
 	"math/rand"
+	"strings"
+	"sync"
 
 	"github.com/zeebo/blake3"
+)
+
+var (
+	sha256Pool = sync.Pool{
+		New: func() interface{} {
+			return sha256.New()
+		},
+	}
 )
 
 /*
@@ -17,13 +28,31 @@ func Encrypt(input string, key string) string {
 */
 
 func Encrypt(input string, key string) string {
-	hash := blake3.Sum256([]byte(input + key))
+	// Optimize string concatenation
+	var sb strings.Builder
+	sb.Grow(len(input) + len(key))
+	sb.WriteString(input)
+	sb.WriteString(key)
+	
+	hash := blake3.Sum256([]byte(sb.String()))
 	return hex.EncodeToString(hash[:])
 }
 
 func EncryptSha(input string, key string) string {
-	hasher := sha256.New()
-	hasher.Write([]byte(input + key))
+	// Use pool to reduce allocations
+	hasher := sha256Pool.Get().(hash.Hash)
+	defer func() {
+		hasher.Reset()
+		sha256Pool.Put(hasher)
+	}()
+	
+	// Optimize string concatenation
+	var sb strings.Builder
+	sb.Grow(len(input) + len(key))
+	sb.WriteString(input)
+	sb.WriteString(key)
+	
+	hasher.Write([]byte(sb.String()))
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 

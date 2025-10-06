@@ -11,7 +11,7 @@ import (
 	"goProxy/core/proxy"
 	"goProxy/core/server"
 	"goProxy/core/utils"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -251,18 +251,21 @@ func VersionCheck() {
 	resp, err := http.Get("https://raw.githubusercontent.com/h1v9/balooProxyX/main/global/proxy/version.json")
 	if err != nil {
 		fmt.Println("Failed to check for proxy version: " + err.Error())
+		return
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Failed to check for proxy version: " + err.Error())
+		return
 	}
 
 	var proxyVersions GLOBAL_PROXY_VERSIONS
 	err = json.Unmarshal(body, &proxyVersions)
 	if err != nil {
 		fmt.Println("Failed to check for proxy version: " + err.Error())
+		return
 	}
 
 	if proxyVersions.StableVersion > proxy.ProxyVersion {

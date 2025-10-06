@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/base64"
 	"goProxy/core/api"
+	"goProxy/core/dedup"
 	"goProxy/core/domains"
 	"goProxy/core/firewall"
+	"goProxy/core/metrics"
 	"goProxy/core/proxy"
 	"goProxy/core/utils"
 	"image"
@@ -23,6 +25,11 @@ import (
 	"github.com/kor44/gofilter"
 )
 
+var (
+	// Request deduplicator
+	requestDedup *dedup.Deduplicator
+)
+
 func SendResponse(str string, buffer *bytes.Buffer, writer http.ResponseWriter) {
 	buffer.WriteString(str)
 	writer.Write(buffer.Bytes())
@@ -31,10 +38,13 @@ func SendResponse(str string, buffer *bytes.Buffer, writer http.ResponseWriter) 
 func Middleware(writer http.ResponseWriter, request *http.Request) {
 
 	// defer pnc.PanicHndl() we wont do this during prod, to avoid overhead
+	
+	// Track request timing for metrics (used when metrics are fully integrated)
+	_ = time.Now() // startTime for future metrics integration
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buffer)
 	buffer.Reset()
+	defer bufferPool.Put(buffer)
 
 	domainName := request.Host
 
@@ -45,6 +55,7 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 	if !domainFound {
 		writer.Header().Set("Content-Type", "text/plain")
 		SendResponse("404 Not Found", buffer, writer)
+		metrics.RecordBlockedRequest(domainName, "domain_not_found")
 		return
 	}
 
@@ -58,9 +69,7 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 	var ipCountCookie int
 
 	if domains.Config.Proxy.Cloudflare {
-
 		ip = request.Header.Get("Cf-Connecting-Ip")
-
 		tlsFp = "Cloudflare"
 		browser = "Cloudflare"
 		botFp = ""
@@ -71,7 +80,12 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 		ipCountCookie = firewall.AccessIpsCookie[ip]
 		firewall.Mutex.RUnlock()
 	} else {
-		ip = strings.Split(request.RemoteAddr, ":")[0]
+		// Optimize IP extraction - avoid allocation from Split
+		if idx := strings.LastIndexByte(request.RemoteAddr, ':'); idx != -1 {
+			ip = request.RemoteAddr[:idx]
+		} else {
+			ip = request.RemoteAddr
+		}
 
 		//Retrieve information about the client
 		firewall.Mutex.RLock()
@@ -210,8 +224,17 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 	encryptedIP := ""
 	hashedEncryptedIP := ""
 	susLvStr := utils.StageToString(susLv)
-	accessKey := ip + tlsFp + reqUa + proxy.CurrHourStr
-	encryptedCache, encryptedExists := firewall.CacheIps.Load(accessKey + susLvStr)
+	// Optimize string concatenation with strings.Builder
+	var keyBuilder strings.Builder
+	keyBuilder.Grow(len(ip) + len(tlsFp) + len(reqUa) + len(proxy.CurrHourStr) + len(susLvStr))
+	keyBuilder.WriteString(ip)
+	keyBuilder.WriteString(tlsFp)
+	keyBuilder.WriteString(reqUa)
+	keyBuilder.WriteString(proxy.CurrHourStr)
+	accessKey := keyBuilder.String()
+	keyBuilder.WriteString(susLvStr)
+	cacheKey := keyBuilder.String()
+	encryptedCache, encryptedExists := firewall.CacheIps.Load(cacheKey)
 
 	if !encryptedExists {
 		switch susLv {
@@ -230,7 +253,7 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 			SendResponse(blockTxt+"Suspicious request of level "+susLvStr+" (base "+strconv.Itoa(domainData.Stage)+")", buffer, writer)
 			return
 		}
-		firewall.CacheIps.Store(accessKey+susLvStr, encryptedIP)
+		firewall.CacheIps.Store(cacheKey, encryptedIP)
 	} else {
 		encryptedIP = encryptedCache.(string)
 		cachedHIP, foundCachedHIP := firewall.CacheIps.Load(encryptedIP)

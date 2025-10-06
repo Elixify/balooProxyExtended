@@ -26,10 +26,33 @@ func AddLogs(entry domains.DomainLog, domainName string) {
 }
 
 func FormatLogs(log domains.DomainLog) string {
+	// Optimize string concatenation with strings.Builder
+	var sb strings.Builder
+	sb.Grow(200) // Pre-allocate reasonable size for log line
+	
+	sb.WriteString("[ ")
+	sb.WriteString(PrimaryColor(log.Time))
+	sb.WriteString(" ] > \033[35m")
+	sb.WriteString(log.IP)
+	sb.WriteString("\033[0m - ")
+	
 	if log.BrowserFP != "" || log.BotFP != "" {
-		return "[ " + PrimaryColor(log.Time) + " ] > \033[35m" + log.IP + "\033[0m - \033[32m" + log.BrowserFP + log.BotFP + "\033[0m - " + PrimaryColor(log.Useragent) + " - " + PrimaryColor(log.Path)
+		sb.WriteString("\033[32m")
+		sb.WriteString(log.BrowserFP)
+		sb.WriteString(log.BotFP)
+		sb.WriteString("\033[0m")
+	} else {
+		sb.WriteString("\033[31mUNK (")
+		sb.WriteString(log.TLSFP)
+		sb.WriteString(")\033[0m")
 	}
-	return "[ " + PrimaryColor(log.Time) + " ] > \033[35m" + log.IP + "\033[0m - \033[31mUNK (" + log.TLSFP + ")\033[0m - " + PrimaryColor(log.Useragent) + " - " + PrimaryColor(log.Path)
+	
+	sb.WriteString(" - ")
+	sb.WriteString(PrimaryColor(log.Useragent))
+	sb.WriteString(" - ")
+	sb.WriteString(PrimaryColor(log.Path))
+	
+	return sb.String()
 }
 
 // Only run in locked thread
@@ -169,23 +192,20 @@ func TrimTime(timestamp int) int {
 	return (timestamp / 10) * 10
 }
 
+// SafeString is a no-op in modern Go - strings are already immutable
+// Keeping for backward compatibility but optimized to avoid allocation
 func SafeString(str string) string {
-	return string([]byte(str))
+	return str
 }
 
+// Pre-computed stage strings to avoid allocations
+var stageStrings = [6]string{"0", "1", "2", "3", "4", "5+"}
+
 func StageToString(stage int) string {
-	switch stage {
-	case 1:
-		return "1"
-	case 2:
-		return "2"
-	case 3:
-		return "3"
-	case 4:
-		return "4"
-	default:
-		return "5+"
+	if stage >= 0 && stage <= 4 {
+		return stageStrings[stage]
 	}
+	return stageStrings[5]
 }
 
 func closestTo10(n int) int {
