@@ -105,13 +105,13 @@ func Load() {
 	fmt.Println("Loading Fingerprints ...")
 
 	// Load the fingerprints locally
-	if err := GetFingerprintsLocal("fingerprints/known_fingerprints.json", &firewall.KnownFingerprints); err != nil {
+	if err := GetFingerprintsLocal("global/fingerprints/known_fingerprints.json", &firewall.KnownFingerprints); err != nil {
 		panic("[ " + utils.PrimaryColor("!") + " ] [ Error Loading Fingerprints : " + utils.PrimaryColor(err.Error()) + " ]")
 	}
-	if err := GetFingerprintsLocal("fingerprints/bot_fingerprints.json", &firewall.BotFingerprints); err != nil {
+	if err := GetFingerprintsLocal("global/fingerprints/bot_fingerprints.json", &firewall.BotFingerprints); err != nil {
 		panic("[ " + utils.PrimaryColor("!") + " ] [ Error Loading Fingerprints : " + utils.PrimaryColor(err.Error()) + " ]")
 	}
-	if err := GetFingerprintsLocal("fingerprints/malicious_fingerprints.json", &firewall.ForbiddenFingerprints); err != nil {
+	if err := GetFingerprintsLocal("global/fingerprints/malicious_fingerprints.json", &firewall.ForbiddenFingerprints); err != nil {
 		panic("[ " + utils.PrimaryColor("!") + " ] [ Error Loading Fingerprints : " + utils.PrimaryColor(err.Error()) + " ]")
 	}
 
