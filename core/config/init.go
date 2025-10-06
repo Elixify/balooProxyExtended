@@ -29,6 +29,11 @@ func Load() {
 	if err != nil {
 		if os.IsNotExist(err) {
 			Generate()
+			// Reopen the generated config file
+			file, err = os.Open("config.json")
+			if err != nil {
+				panic(err)
+			}
 		} else {
 			panic(err)
 		}
@@ -40,10 +45,14 @@ func Load() {
 
 	// Apply performance tuning based on hardware specs
 	fmt.Println("Calculating Performance Settings ...")
-	tuning := proxy.CalculateOptimalSettings(
-		domains.Config.Proxy.Performance.CPUCores,
-		domains.Config.Proxy.Performance.RAMSize,
-	)
+	cpuCores := 0
+	ramMB := 0
+	// Check if performance settings exist in config
+	if domains.Config.Proxy.Performance.CPUCores != 0 || domains.Config.Proxy.Performance.RAMSize != 0 {
+		cpuCores = domains.Config.Proxy.Performance.CPUCores
+		ramMB = domains.Config.Proxy.Performance.RAMSize
+	}
+	tuning := proxy.CalculateOptimalSettings(cpuCores, ramMB)
 	tuning.ApplySettings()
 	proxy.CurrentTuning = tuning
 

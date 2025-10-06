@@ -41,6 +41,10 @@ func Generate() {
 				"challengeFailures":  utils.AskInt("After How Many Failed Attempts At Solving A Challenge From An IP Within 2 Minutes Should It Be Blocked?", 40),
 				"noRequestsSent":     utils.AskInt("After How Many TCP Connection Attempts Without Sending A Http Request From An IP Within 2 Minutes Should It Be Blocked?", 10),
 			},
+			Performance: domains.PerformanceSettings{
+				CPUCores: 0, // Auto-detect
+				RAMSize:  0, // Auto-detect
+			},
 		},
 		Domains: []domains.Domain{},
 	}
