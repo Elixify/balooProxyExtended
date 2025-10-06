@@ -8,6 +8,7 @@ import (
 	"goProxy/core/domains"
 	"goProxy/core/firewall"
 	"goProxy/core/metrics"
+	"goProxy/core/pnc"
 	"goProxy/core/proxy"
 	"goProxy/core/utils"
 	"image"
@@ -37,7 +38,8 @@ func SendResponse(str string, buffer *bytes.Buffer, writer http.ResponseWriter) 
 
 func Middleware(writer http.ResponseWriter, request *http.Request) {
 
-	// defer pnc.PanicHndl() we wont do this during prod, to avoid overhead
+	// Panic recovery is essential under high load to prevent crashes
+	defer pnc.PanicHndl()
 	
 	// Track request timing for metrics (used when metrics are fully integrated)
 	_ = time.Now() // startTime for future metrics integration

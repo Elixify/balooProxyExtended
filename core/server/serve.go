@@ -220,31 +220,34 @@ func (rt *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-var defaultTransport = &http.Transport{
-	DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-		return (&net.Dialer{
-			Timeout:   5 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).DialContext(ctx, network, addr)
-	},
-	TLSHandshakeTimeout:   10 * time.Second,
-	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
-	IdleConnTimeout:       90 * time.Second,
-	MaxIdleConns:          100,           // Increased from 10
-	MaxIdleConnsPerHost:   20,            // Added for better connection reuse
-	MaxConnsPerHost:       0,             // 0 = unlimited, removed bottleneck
-	ExpectContinueTimeout: 1 * time.Second, // Added for better performance
-	ForceAttemptHTTP2:     true,          // Enable HTTP/2 when possible
-	DisableCompression:    false,         // Keep compression enabled
-	WriteBufferSize:       4096,          // Optimize buffer size
-	ReadBufferSize:        4096,          // Optimize buffer size
+func createTransport() *http.Transport {
+	return &http.Transport{
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return (&net.Dialer{
+				Timeout:   5 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).DialContext(ctx, network, addr)
+		},
+		TLSHandshakeTimeout:   10 * time.Second,
+		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+		IdleConnTimeout:       90 * time.Second,
+		MaxIdleConns:          100,
+		MaxIdleConnsPerHost:   20,
+		MaxConnsPerHost:       0,
+		ExpectContinueTimeout: 1 * time.Second,
+		ForceAttemptHTTP2:     true,
+		DisableCompression:    false,
+		WriteBufferSize:       4096,
+		ReadBufferSize:        4096,
+	}
 }
 
 func getTripperForDomain(domain string) *http.Transport {
-
 	transport, ok := transportMap.Load(domain)
 	if !ok {
-		transport, _ = transportMap.LoadOrStore(domain, defaultTransport)
+		// Create a NEW transport for each domain to avoid connection pool conflicts
+		newTransport := createTransport()
+		transport, _ = transportMap.LoadOrStore(domain, newTransport)
 	}
 	return transport.(*http.Transport)
 }
