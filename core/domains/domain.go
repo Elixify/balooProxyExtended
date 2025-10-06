@@ -93,15 +93,21 @@ type DomainData struct {
 }
 
 type Proxy struct {
-	Cloudflare      bool              `json:"cloudflare"`
-	AdminSecret     string            `json:"adminsecret"`
-	APISecret       string            `json:"apisecret"`
-	Secrets         map[string]string `json:"secrets"`
-	Timeout         TimeoutSettings   `json:"timeout"`
-	RatelimitWindow int               `json:"ratelimit_time"`
-	Ratelimits      map[string]int    `json:"ratelimits"`
-	Colors          []string          `json:"colors"`
-	Stealth         bool              `json:"stealth"`
+	Cloudflare      bool                   `json:"cloudflare"`
+	AdminSecret     string                 `json:"adminsecret"`
+	APISecret       string                 `json:"apisecret"`
+	Secrets         map[string]string      `json:"secrets"`
+	Timeout         TimeoutSettings        `json:"timeout"`
+	RatelimitWindow int                    `json:"ratelimit_time"`
+	Ratelimits      map[string]int         `json:"ratelimits"`
+	Colors          []string               `json:"colors"`
+	Stealth         bool                   `json:"stealth"`
+	Performance     PerformanceSettings    `json:"performance"`
+}
+
+type PerformanceSettings struct {
+	CPUCores int `json:"cpu_cores"` // Number of CPU cores (0 = auto-detect)
+	RAMSize  int `json:"ram_mb"`    // RAM in MB (0 = auto-detect)
 }
 
 type TimeoutSettings struct {

@@ -38,6 +38,15 @@ func Load() {
 
 	proxy.Cloudflare = domains.Config.Proxy.Cloudflare
 
+	// Apply performance tuning based on hardware specs
+	fmt.Println("Calculating Performance Settings ...")
+	tuning := proxy.CalculateOptimalSettings(
+		domains.Config.Proxy.Performance.CPUCores,
+		domains.Config.Proxy.Performance.RAMSize,
+	)
+	tuning.ApplySettings()
+	proxy.CurrentTuning = tuning
+
 	proxy.CookieSecret = domains.Config.Proxy.Secrets["cookie"]
 	if strings.Contains(proxy.CookieSecret, "CHANGE_ME") {
 		panic("[ " + utils.PrimaryColor("!") + " ] [ Cookie Secret Contains 'CHANGE_ME', Refusing To Load ]")

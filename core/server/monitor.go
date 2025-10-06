@@ -588,7 +588,8 @@ func evaluateRatelimit() {
 		}
 
 		// Delete outdated records & calculate requests for every ip
-		firewall.AccessIps = map[string]int{}
+		// Pre-allocate with estimated capacity to reduce allocations
+		firewall.AccessIps = make(map[string]int, len(firewall.AccessIps))
 		for windowTime, accessIPs := range firewall.WindowAccessIps {
 			if utils.TrimTime(windowTime)+proxy.RatelimitWindow < proxy.LastSecondTimestamp {
 				//log.Printf("Deleting AccessIPs Windows For %d", windowTime)
@@ -599,7 +600,7 @@ func evaluateRatelimit() {
 				}
 			}
 		}
-		firewall.AccessIpsCookie = map[string]int{}
+		firewall.AccessIpsCookie = make(map[string]int, len(firewall.AccessIpsCookie))
 		for windowTime, accessIPsCookie := range firewall.WindowAccessIpsCookie {
 			if utils.TrimTime(windowTime)+proxy.RatelimitWindow < proxy.LastSecondTimestamp {
 				//log.Printf("Deleting AccessIPsCookie Windows For %d", windowTime)
@@ -610,7 +611,7 @@ func evaluateRatelimit() {
 				}
 			}
 		}
-		firewall.UnkFps = map[string]int{}
+		firewall.UnkFps = make(map[string]int, len(firewall.UnkFps))
 		for windowTime, unkFps := range firewall.WindowUnkFps {
 			if utils.TrimTime(windowTime)+proxy.RatelimitWindow < proxy.LastSecondTimestamp {
 				//log.Printf("Deleting AccessUnkFps Windows For %d", windowTime)

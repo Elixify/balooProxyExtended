@@ -43,7 +43,9 @@ func Serve() {
 			MaxHeaderBytes:    1 << 20,
 		}
 
-		http2.ConfigureServer(service, &http2.Server{})
+		http2.ConfigureServer(service, &http2.Server{
+			MaxConcurrentStreams: 250, // Limit HTTP/2 streams for low-resource systems
+		})
 		service.SetKeepAlivesEnabled(true)
 		service.Handler = http.HandlerFunc(Middleware)
 
@@ -76,8 +78,12 @@ func Serve() {
 			MaxHeaderBytes: 1 << 20,
 		}
 
-		http2.ConfigureServer(service, &http2.Server{})
-		http2.ConfigureServer(serviceH, &http2.Server{})
+		http2.ConfigureServer(service, &http2.Server{
+			MaxConcurrentStreams: proxy.CurrentTuning.HTTP2MaxStreams,
+		})
+		http2.ConfigureServer(serviceH, &http2.Server{
+			MaxConcurrentStreams: proxy.CurrentTuning.HTTP2MaxStreams,
+		})
 
 		service.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			firewall.Mutex.RLock()
@@ -231,9 +237,9 @@ func createTransport() *http.Transport {
 		TLSHandshakeTimeout:   10 * time.Second,
 		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
 		IdleConnTimeout:       90 * time.Second,
-		MaxIdleConns:          100,
-		MaxIdleConnsPerHost:   20,
-		MaxConnsPerHost:       0,
+		MaxIdleConns:          proxy.CurrentTuning.MaxIdleConns,
+		MaxIdleConnsPerHost:   proxy.CurrentTuning.MaxIdleConnsPerHost,
+		MaxConnsPerHost:       proxy.CurrentTuning.MaxConnsPerHost,
 		ExpectContinueTimeout: 1 * time.Second,
 		ForceAttemptHTTP2:     true,
 		DisableCompression:    false,

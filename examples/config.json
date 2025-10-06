@@ -25,7 +25,11 @@
         "colors": [
             "0",
             "31"
-        ]
+        ],
+        "performance": {
+            "cpu_cores": 0,
+            "ram_mb": 0
+        }
     },
     "domains": [
         {

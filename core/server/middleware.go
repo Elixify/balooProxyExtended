@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/kor44/gofilter"
@@ -29,6 +30,13 @@ import (
 var (
 	// Request deduplicator
 	requestDedup *dedup.Deduplicator
+	
+	// String builder pool for efficient string concatenation
+	stringBuilderPool = sync.Pool{
+		New: func() interface{} {
+			return &strings.Builder{}
+		},
+	}
 )
 
 func SendResponse(str string, buffer *bytes.Buffer, writer http.ResponseWriter) {
@@ -114,14 +122,8 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	// Optimize: Minimize lock time for high throughput
 	firewall.Mutex.Lock()
-	// Leaving this here for future reference. When the monitor thread that's supposed to prefill these maps lags
-	//behind for some reason, this will be come really messy. The mutex will be locked and never unlocked again,
-	//freezing the entire proxy
-	/*_, temp_found := firewall.WindowAccessIps[proxy.Last10SecondTimestamp]
-	if !temp_found {
-		log.Printf("Attempting To Set %s, %d but timestamp hasn't been set yet ?!?", ip, proxy.Last10SecondTimestamp)
-	}*/
 	firewall.WindowAccessIps[proxy.Last10SecondTimestamp][ip]++
 	domainData = domains.DomainsData[domainName]
 	domainData.TotalRequests++
@@ -226,8 +228,11 @@ func Middleware(writer http.ResponseWriter, request *http.Request) {
 	encryptedIP := ""
 	hashedEncryptedIP := ""
 	susLvStr := utils.StageToString(susLv)
-	// Optimize string concatenation with strings.Builder
-	var keyBuilder strings.Builder
+	// Optimize string concatenation with pooled strings.Builder
+	keyBuilder := stringBuilderPool.Get().(*strings.Builder)
+	keyBuilder.Reset()
+	defer stringBuilderPool.Put(keyBuilder)
+	
 	keyBuilder.Grow(len(ip) + len(tlsFp) + len(reqUa) + len(proxy.CurrHourStr) + len(susLvStr))
 	keyBuilder.WriteString(ip)
 	keyBuilder.WriteString(tlsFp)
